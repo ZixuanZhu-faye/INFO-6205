@@ -1,0 +1,197 @@
+/*
+ * Copyright (c) 2018. Phasmid Software
+ */
+
+package edu.neu.coe.info6205.util;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+import edu.neu.coe.info6205.sort.elementary.InsertionSort;
+
+import static edu.neu.coe.info6205.util.Utilities.formatWhole;
+
+/**
+ * This class implements a simple Benchmark utility for measuring the running time of algorithms.
+ * It is part of the repository for the INFO6205 class, taught by Prof. Robin Hillyard
+ * <p>
+ * It requires Java 8 as it uses function types, in particular, UnaryOperator&lt;T&gt; (a function of T => T),
+ * Consumer&lt;T&gt; (essentially a function of T => Void) and Supplier&lt;T&gt; (essentially a function of Void => T).
+ * <p>
+ * In general, the benchmark class handles three phases of a "run:"
+ * <ol>
+ *     <li>The pre-function which prepares the input to the study function (field fPre) (may be null);</li>
+ *     <li>The study function itself (field fRun) -- assumed to be a mutating function since it does not return a result;</li>
+ *     <li>The post-function which cleans up and/or checks the results of the study function (field fPost) (may be null).</li>
+ * </ol>
+ * <p>
+ * Note that the clock does not run during invocations of the pre-function and the post-function (if any).
+ *
+ * @param <T> The generic type T is that of the input to the function f which you will pass in to the constructor.
+ */
+public class Benchmark_Timer<T> implements Benchmark<T> {
+
+    /**
+     * Calculate the appropriate number of warmup runs.
+     *
+     * @param m the number of runs.
+     * @return at least 2 and at most m/10.
+     */
+    static int getWarmupRuns(int m) {
+        return Integer.max(2, Integer.min(10, m / 10));
+    }
+
+    /**
+     * Run function f m times and return the average time in milliseconds.
+     *
+     * @param supplier a Supplier of a T
+     * @param m        the number of times the function f will be called.
+     * @return the average number of milliseconds taken for each run of function f.
+     */
+    @Override
+    public double runFromSupplier(Supplier<T> supplier, int m) {
+        logger.info("Begin run: " + description + " with " + formatWhole(m) + " runs");
+        // Warmup phase
+        final Function<T, T> function = t -> {
+            fRun.accept(t);
+            return t;
+        };
+        new Timer().repeat(getWarmupRuns(m), supplier, function, fPre, null);
+
+        // Timed phase
+        return new Timer().repeat(m, supplier, function, fPre, fPost);
+    }
+
+    /**
+     * Constructor for a Benchmark_Timer with option of specifying all three functions.
+     *
+     * @param description the description of the benchmark.
+     * @param fPre        a function of T => T.
+     *                    Function fPre is run before each invocation of fRun (but with the clock stopped).
+     *                    The result of fPre (if any) is passed to fRun.
+     * @param fRun        a Consumer function (i.e. a function of T => Void).
+     *                    Function fRun is the function whose timing you want to measure. For example, you might create a function which sorts an array.
+     *                    When you create a lambda defining fRun, you must return "null."
+     * @param fPost       a Consumer function (i.e. a function of T => Void).
+     */
+    public Benchmark_Timer(String description, UnaryOperator<T> fPre, Consumer<T> fRun, Consumer<T> fPost) {
+        this.description = description;
+        this.fPre = fPre;
+        this.fRun = fRun;
+        this.fPost = fPost;
+    }
+
+    /**
+     * Constructor for a Benchmark_Timer with option of specifying all three functions.
+     *
+     * @param description the description of the benchmark.
+     * @param fPre        a function of T => T.
+     *                    Function fPre is run before each invocation of fRun (but with the clock stopped).
+     *                    The result of fPre (if any) is passed to fRun.
+     * @param fRun        a Consumer function (i.e. a function of T => Void).
+     *                    Function fRun is the function whose timing you want to measure. For example, you might create a function which sorts an array.
+     */
+    public Benchmark_Timer(String description, UnaryOperator<T> fPre, Consumer<T> fRun) {
+        this(description, fPre, fRun, null);
+    }
+
+    /**
+     * Constructor for a Benchmark_Timer with only fRun and fPost Consumer parameters.
+     *
+     * @param description the description of the benchmark.
+     * @param fRun        a Consumer function (i.e. a function of T => Void).
+     *                    Function fRun is the function whose timing you want to measure. For example, you might create a function which sorts an array.
+     *                    When you create a lambda defining fRun, you must return "null."
+     * @param fPost       a Consumer function (i.e. a function of T => Void).
+     */
+    public Benchmark_Timer(String description, Consumer<T> fRun, Consumer<T> fPost) {
+        this(description, null, fRun, fPost);
+    }
+
+    /**
+     * Constructor for a Benchmark_Timer where only the (timed) run function is specified.
+     *
+     * @param description the description of the benchmark.
+     * @param f           a Consumer function (i.e. a function of T => Void).
+     *                    Function f is the function whose timing you want to measure. For example, you might create a function which sorts an array.
+     */
+    public Benchmark_Timer(String description, Consumer<T> f) {
+        this(description, null, f, null);
+    }
+
+    private final String description;
+    private final UnaryOperator<T> fPre;
+    private final Consumer<T> fRun;
+    private final Consumer<T> fPost;
+
+    final static LazyLogger logger = new LazyLogger(Benchmark_Timer.class);
+    
+public static void main(String[] args) {
+    	
+    	System.out.println("B-E-G-I-N");
+    	    	
+    	int n = 150;
+    	int noOfTimesForDoubling = 10;
+    	int numbersUpperBound = 1000;
+    	int numberOfRuns = 30;
+    	String description="InsertionSort Time";
+    	UnaryOperator<Integer[]> fPre = array -> {return array.clone();};
+    	Consumer<Integer[]> fRun = array->new InsertionSort<Integer>().sort(array,0,array.length);    	
+    	InsertionSort<Integer> insert=new InsertionSort<>();
+    	Consumer<Integer[]> fPost = array -> {};
+    	Benchmark_Timer<Integer[]> benchmark_t=new Benchmark_Timer<>(description,fPre,fRun,fPost);
+    	
+    	// Create an instance of Benchmark_Timer class
+    	
+    	
+    	// Run Benchmark_Timer for 10 values of n doubling n at each iteration
+    	
+//    	int iteration = 1;
+    	for(int i=1; i<=noOfTimesForDoubling; i++) {
+    		n = n*2;
+    		
+    		// 1. Random Array
+    		
+    		System.out.println("Random Array Sorting "+ i + " n = "+n);
+    		Integer[] randomArray = new Integer[n];
+    		for(int j=0; j<randomArray.length; j++) {
+    			randomArray[j] = rand.nextInt(numbersUpperBound);
+    		}
+    		System.out.println("Mean lap time: "+bt.run(randomArray, numberOfRuns));
+    		
+    		// 2. Partially Sorted (50% sorted)
+    		
+    		System.out.println("Partially Sorted Array Sorting "+ i + " n = "+n);
+    		bt.insertionSort(randomArray, 0, randomArray.length/2);
+    		Integer[] partiallySortedArray = new Integer[n];
+    		for(int j=0; j<randomArray.length; j++) {
+    			partiallySortedArray[j] = randomArray[j];
+    		}
+    		System.out.println("Mean lap time: "+bt.run(partiallySortedArray, numberOfRuns));
+    		
+    		// 3. Fully sorted
+    		
+    		System.out.println("Fully Sorted Array Sorting "+ i + " n = "+n);
+    		bt.sort(randomArray,0,randomArray.length);
+    		Integer[] orderedArray = new Integer[n];
+    		for(int j=0; j<randomArray.length; j++) {
+    			orderedArray[j] = randomArray[j];
+    		}
+    		//bt.printArray(orderedArray);
+    		System.out.println("Mean lap time: "+bt.run(orderedArray, numberOfRuns));
+    		
+    		// 4. Reversed Sorted
+    		
+    		System.out.println("Reverse Sorted Array Sorting "+ i + " n = "+n);
+    		Integer[] reverseOrdered = new Integer[n];
+    		for(int j=0,k=randomArray.length-1; j<randomArray.length && k>-1; j++,k--) {
+    			 reverseOrdered[k] = orderedArray[j];
+    		}
+    		//bt.printArray(reverseOrdered);
+    		System.out.println("Mean lap time: "+bt.run(reverseOrdered, numberOfRuns));
+    	}
+    	
+		System.out.println("Benchmark_Timer task complete!");
+	}
+}

@@ -4,10 +4,15 @@
 
 package edu.neu.coe.info6205.util;
 
+import java.sql.Array;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+
+import edu.neu.coe.info6205.sort.Helper;
+import edu.neu.coe.info6205.sort.elementary.InsertionSort;
 
 import static edu.neu.coe.info6205.util.Utilities.formatWhole;
 
@@ -125,4 +130,93 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
     private final Consumer<T> fPost;
 
     final static LazyLogger logger = new LazyLogger(Benchmark_Timer.class);
+    
+public static void main(String[] args) {
+    	
+    	System.out.println("B-E-G-I-N");
+    	    	
+    	int n = 20;
+    	int doubling_n = 10;
+    	int numbersUpperBound = 1000;
+    	int running_times = 30;
+    	String description="InsertionSort Time";
+    	Random rand=new Random();
+    	UnaryOperator<Integer[]> fPre = array -> {return array.clone();};
+    	Consumer<Integer[]> fRun = array->new InsertionSort<Integer>().sort(array,0,array.length);    	
+    	Consumer<Integer[]> fPost = array -> {};
+    	InsertionSort<Integer> insert=new InsertionSort<>();
+    	Benchmark_Timer<Integer[]> benchmark_t=new Benchmark_Timer<>(description,fPre,fRun,fPost);
+    	
+    	Integer[] n_=new Integer[doubling_n+1];
+    	Double[] rd=new Double[doubling_n+1];
+    	Double[] po=new Double[doubling_n+1];
+    	Double[] o=new Double[doubling_n+1];
+    	Double[] ro=new Double[doubling_n+1];
+
+    	
+    	// n will double 10 times
+    	for(int i=1; i<=doubling_n; i++) {
+    		n = n*2;
+    		n_[i]=n;
+    		System.out.println("Round "+i);
+    		
+    		//Random
+    		
+    		System.out.println("Random: n = "+n);
+    		Integer[] random = new Integer[n];
+    		for(int j=0; j<random.length; j++) {
+    			random[j] = rand.nextInt(numbersUpperBound);
+    		}
+    		System.out.println("Meantime: "+benchmark_t.run(random, running_times));
+    		rd[i]=benchmark_t.run(random, running_times);
+    		
+    		//Partially-ordered
+    		
+    		System.out.println("Partially-ordered: n = "+n);
+    		insert.sort(random,random.length/2,random.length);
+    		Integer[] part_ordered = new Integer[n];
+    		for(int j=0; j<random.length; j++) {
+    			part_ordered[j] = random[j];
+    		}
+    		System.out.println("Meantime: "+benchmark_t.run(part_ordered, running_times));
+    		po[i]=benchmark_t.run(part_ordered, running_times);
+    		
+    		//Ordered
+    		
+    		System.out.println("Ordered: n = "+n);
+    		insert.sort(random,0,random.length);
+    		Integer[] ordered = new Integer[n];
+    		for(int j=0; j<random.length; j++) {
+    			ordered[j] = random[j];
+    		}
+    		System.out.println("Meantime: "+benchmark_t.run(ordered, running_times));
+    		o[i]=benchmark_t.run(ordered, running_times);
+    		
+    		//Reverse-ordered
+    		
+    		System.out.println("Reverse-ordered n = "+n);
+    		Integer[] re_ordered = new Integer[n];
+    		for(int j=0,m=random.length-1; j<random.length && m>-1; j++,m--) {
+    			 re_ordered[m] = ordered[j];
+    		}
+    		System.out.println("Mean lap time: "+benchmark_t.run(re_ordered, running_times));
+    		//ro[i]=benchmark_t.run(re_ordered, running_times);
+    	}
+//    	for(int k=0;k<n_.length;k++){
+//        	System.out.println(n_[k]);
+//    	}
+//    	for(int k=0;k<rd.length;k++){
+//        	System.out.println(rd[k]);
+//    	}
+//    	for(int k=0;k<po.length;k++){
+//        	System.out.println(po[k]);
+//    	}
+//    	for(int k=0;k<o.length;k++){
+//        	System.out.println(o[k]);
+//    	}
+//    	for(int k=0;k<ro.length;k++){
+//        	System.out.println(ro[k]);
+//    	}
+		System.out.println("E-N-D");
+	}
 }
