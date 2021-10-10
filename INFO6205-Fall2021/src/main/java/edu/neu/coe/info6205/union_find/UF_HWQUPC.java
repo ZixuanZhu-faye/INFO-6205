@@ -8,6 +8,7 @@
 package edu.neu.coe.info6205.union_find;
 
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * Height-weighted Quick Union with Path Compression
@@ -81,6 +82,18 @@ public class UF_HWQUPC implements UF {
     public int find(int p) {
         validate(p);
         int root = p;
+        if(this.pathCompression){
+        	while(root!=parent[root]){
+            	doPathCompression(root);
+            	root=parent[root];
+            }
+        	
+        }
+        else{
+        	while(root!=parent[root]){
+        		root=parent[root];
+        	}
+        }
         // TO BE IMPLEMENTED
         return root;
     }
@@ -168,6 +181,14 @@ public class UF_HWQUPC implements UF {
     private boolean pathCompression;
 
     private void mergeComponents(int i, int j) {
+    	if(height[i]<height[j]){
+    		parent[i]=j;
+    		height[j]+=height[i];
+    	}
+    	else{
+    		parent[j]=i;
+    		height[i]+=height[j];
+    	}
         // TO BE IMPLEMENTED make shorter root point to taller one
     }
 
@@ -175,6 +196,41 @@ public class UF_HWQUPC implements UF {
      * This implements the single-pass path-halving mechanism of path compression
      */
     private void doPathCompression(int i) {
+    	parent[i]=parent[parent[i]];
         // TO BE IMPLEMENTED update parent to value of grandparent
+    }
+    
+    public static int count(int n){
+    	UF_HWQUPC uf=new UF_HWQUPC(n);
+    	int result=0;
+    	Random ram=new Random();
+    	
+    	while(uf.components()>1){
+    		int p=ram.nextInt(n);
+    		int q=ram.nextInt(n);
+    		uf.connect(p, q);
+    		result++;
+    	}
+    	return result;
+    }
+    
+    public static void main(String[] args){
+    	int[] n={100,300,900,1200,1800,2800,3700,5600,7800,9000};
+    	int time=100;	// the times that count function will run
+    	double result;
+    	System.out.println("B-E-G-I-N");
+    	System.out.println("Every site will run "+time+" times and adopt the mean result.");
+    	for(int i=0;i<n.length;i++){
+    		result=0;
+    		System.out.println("Site:"+n[i]+"-------------------------------------------------------------------");
+    		for(int j=0;j<time;j++){
+    			result+=count(n[i]);
+    		}
+    		result/=time;
+    		
+    		System.out.println("The mean number of connections generated:"+result);
+    		System.out.println("The result of '0.5*n*log(n)':"+0.5*n[i]*Math.log(n[i]));
+    	}
+    	System.out.println("E-N-D");
     }
 }
