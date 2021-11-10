@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -29,7 +30,10 @@ public class Main {
             long startTime = System.currentTimeMillis();
             for (int t = 0; t < 10; t++) {
                 for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-                ParSort.sort(array, 0, array.length);
+                //ParSort.sort(array, 0, array.length,2);
+                //ParSort.sort(array, 0, array.length,4);
+                //ParSort.sort(array, 0, array.length,8);
+                ParSort.sysSort(array);
             }
             long endTime = System.currentTimeMillis();
             time = (endTime - startTime);
@@ -40,7 +44,10 @@ public class Main {
 
         }
         try {
-            FileOutputStream fis = new FileOutputStream("./src/result.csv");
+            //FileOutputStream fis = new FileOutputStream("./src/result_2thread.csv");
+            //FileOutputStream fis = new FileOutputStream("./src/result_4thread.csv");
+        	//FileOutputStream fis = new FileOutputStream("./src/result_8thread.csv");
+        	FileOutputStream fis = new FileOutputStream("./src/result_sysSort.csv");
             OutputStreamWriter isr = new OutputStreamWriter(fis);
             BufferedWriter bw = new BufferedWriter(isr);
             int j = 0;
